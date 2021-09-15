@@ -4,10 +4,8 @@
 
 using namespace std;
 
-
 class Key {
 private:
-
     bool bitKey[56] = { false, false, false, false, false, false, false, false,
                         false, false, false, false, false, false, false, false,
                         false, false, false, false, false, false, false, false,
@@ -17,8 +15,7 @@ private:
                         false, false, false, false, false, false, false, false };
     bool C[28];
     bool D[28];
-    bool transformedKeysTab[16][48];
-
+    bool transformedKeysTab[16][48];                                    //todo (decryption)
 
     int PC1[56] = { 57, 49, 41, 33, 25, 17,  9,  1,
                     58, 50, 42, 34, 26, 18, 10,  2,
@@ -48,10 +45,7 @@ private:
         D[27] = helperD;
     }
 
-
-
 public:
-
     bool transformedKey[48];
 
     Key() {}
@@ -62,8 +56,6 @@ public:
             else D[i-28] = bitKey[i];
         }
     }
-
-
 
     void transform(int counter) {
 
@@ -82,50 +74,7 @@ public:
     void addKey(int counter) {
         for(int i=0; i<48; i++) transformedKeysTab[counter][i] = transformedKey[i];
     }
-
-    /* *********************************************************************************
-     *
-     *                      FOR TESTING
-     *
-     ********************************************************************************** */
-
-    void printTest() {
-
-        cout << '\n' <<"bitKey:" << '\t';
-
-        for(int i=0; i<48; i++) cout << bitKey[i];
-
-        cout << '\n' <<"transformedKey:" << '\t';
-
-        for(int i=0; i<48; i++) cout << transformedKey[i];
-
-        cout << '\n' <<"C:" << '\t';
-
-        for(int i=0; i<28; i++) cout << C[i];
-
-        cout << '\n' <<"D:" << '\t';
-
-        for(int i=0; i<28; i++) cout << D[i];
-
-    }
-
-    void printCD() {
-        cout << '\n' <<"C:" << '\t';
-
-        for(int i=0; i<28; i++) cout << C[i];
-
-        cout << '\n' <<"D:" << '\t';
-
-        for(int i=0; i<28; i++) cout << D[i];
-    }
-
-    void printTransformedKey(){
-        cout << '\n' <<"transformedKey:" << '\t';
-
-        for(int i=0; i<48; i++) cout << transformedKey[i];
-    }
 };
-
 
 class Des {
 private:
@@ -284,7 +233,6 @@ private:
         for(int i=0; i<32; i++) sideL[i] = sideL[i] ^ fFunctionResult[i];   // XOR f Function result with left half
     }
 
-
     void finalPermutation() {
         bool toPermute[64];
 
@@ -293,7 +241,7 @@ private:
             toPermute[i+32] = sideL[i];
         }
 
-        for(int i=0; i<64; i++) encryptedTxt[i] = toPermute[FP[i]-1];
+        for(int i=0; i<64; i++) encryptedTxt[i] = toPermute[FP[i]-1];   // Final Permutation
     }
 
 public:
@@ -315,9 +263,7 @@ public:
         }
     }
 
-
     void encryption() {
-
 
         for(int i=0; i<16; i++){
             key.transform(i);
@@ -332,13 +278,7 @@ public:
         finalPermutation();
     }
 
-    void printEncrypted() {
-
-        cout << '\n' << "Encrypted bits: ";
-
-        for(bool i : encryptedTxt) cout << i;
-
-
+    string getEncrypted() {
         string final;
 
         for(int i=0; i<8; i++) {
@@ -351,55 +291,24 @@ public:
             final += bin2ascii(bin);
         }
 
-        cout<< '\n' << '\n';
-
-        for(int i=0; i<8; i++){
-            cout << i << ": " << final[i] << '\n';
-        }
-
-        cout << '\n' << "Encrypted text: " << final << '\n';
-    }
-
-
-    /* *********************************************************************************
-     *
-     *                      FOR TESTING
-     *
-     ********************************************************************************** */
-
-    Key getKey() { return key; }
-
-    void printTest() {
-        cout << '\n' <<"plainTxt:" << '\t';
-
-        for(bool i : plainTxt) cout << i;
-
-
-        cout << '\n' <<"sideL:" << '\t' << '\t';
-
-        for(bool i : sideL) cout << i;
-
-        cout << '\n' <<"sideR:" << '\t' << '\t';
-
-        for(bool i : sideR) cout << i;
-
-        cout << '\n';
-    }
-
-    void printSides() {
-        cout << '\n' <<"sideL:" << '\t' << '\t';
-
-        for(bool i : sideL) cout << i;
-
-        cout << '\n' <<"sideR:" << '\t' << '\t';
-
-        for(bool i : sideR) cout << i;
-
-        cout << '\n';
+        return final;
     }
 };
 
 
+
+string encrypt(bool binInput[64], bool binKey[64]){
+
+    string final;
+
+    Key desKey(binKey);
+    Des des(binInput, desKey);
+
+    des.encryption();
+    final = des.getEncrypted();
+
+    return final;
+}
 
 
 int main() {
@@ -420,6 +329,8 @@ int main() {
         binKey[j] = false;
     }
 
+    cout << "Enter text that you want to encrypt: ";
+
     cin >> input;
 
     length = input.length();
@@ -434,25 +345,9 @@ int main() {
 
             for(int i=0; i<length; i++) {
 
-                if(i != 0 && (i%8) == 0) {
-                                                                    //todo ( to encryption function )
-                    cout << "binInput:" << '\t';
+                if(i != 0 && (i%8) == 0) {                                             // encrypt 64 bits
 
-                    for(bool b : binInput) cout << b;
-
-
-                    cout << '\n' <<"binKey:" << '\t' << '\t';
-
-                    for(bool b : binKey) cout << b;
-
-                    cout << '\n';
-
-
-                    Key desKey(binKey);
-                    Des des(binInput, desKey);
-
-                    des.encryption();
-                    des.printEncrypted();
+                    encrypted += encrypt(binInput, binKey);
 
                     for(int j=0; j<64; j++) {
                         binInput[j] = false;
@@ -460,11 +355,11 @@ int main() {
                     }
 
                     counter = 0;
-                }                                       // encrypt 8 chars
+                }
 
                 for(int j=0; j<8; j++) {
 
-                    keyFile >> in;                                                  // Inserting key from file char by char
+                    keyFile >> in;                                                  // Inserting key from file char by char into boolean table
 
                     if(in == '0') {
                         binKey[j+(counter*8)] = false;
@@ -476,8 +371,7 @@ int main() {
                     }
                 }           // insert key to table
 
-
-                int helperInput = int(input[i]);
+                int helperInput = int(input[i]);                                     // Inserting one char from input string into boolean table
 
                 for(int j=0; j<8; j++) {
                     bool resultInput = helperInput%2;
@@ -487,29 +381,13 @@ int main() {
 
                 counter++;
             }
-
-            //todo ( to encryption function )
-            cout << "binInput:" << '\t';
-
-            for(bool b : binInput) cout << b;
-
-
-            cout << '\n' <<"binKey:" << '\t' << '\t';
-
-            for(bool b : binKey) cout << b;
-
-            cout << '\n';
-
-
-            Key desKey(binKey);
-            Des des(binInput, desKey);
-
-            des.encryption();
-            des.printEncrypted();
+            encrypted += encrypt(binInput, binKey);
 
             break;
         }
     }
+
+    cout << "Encrypted text in ASCII: " << encrypted;
 
     keyFile.close();
 
