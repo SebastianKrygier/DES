@@ -8,7 +8,13 @@ using namespace std;
 class Key {
 private:
 
-    bool bitKey[56];
+    bool bitKey[56] = { false, false, false, false, false, false, false, false,
+                        false, false, false, false, false, false, false, false,
+                        false, false, false, false, false, false, false, false,
+                        false, false, false, false, false, false, false, false,
+                        false, false, false, false, false, false, false, false,
+                        false, false, false, false, false, false, false, false,
+                        false, false, false, false, false, false, false, false };
     bool C[28];
     bool D[28];
     bool transformedKeysTab[16][48];
@@ -330,11 +336,10 @@ public:
 
         cout << '\n' << "Encrypted bits: ";
 
-        for(int i=0; i<64; i++) {
-            cout << encryptedTxt[i];
-        }
+        for(bool i : encryptedTxt) cout << i;
 
-        string final = "";
+
+        string final;
 
         for(int i=0; i<8; i++) {
             bool bin[8];
@@ -352,7 +357,7 @@ public:
             cout << i << ": " << final[i] << '\n';
         }
 
-        cout << '\n' << "Encrypted text: " << final;
+        cout << '\n' << "Encrypted text: " << final << '\n';
     }
 
 
@@ -367,16 +372,16 @@ public:
     void printTest() {
         cout << '\n' <<"plainTxt:" << '\t';
 
-        for(int i=0; i<64; i++) cout << plainTxt[i];
+        for(bool i : plainTxt) cout << i;
 
 
         cout << '\n' <<"sideL:" << '\t' << '\t';
 
-        for(int i=0; i<32; i++) cout << sideL[i];
+        for(bool i : sideL) cout << i;
 
         cout << '\n' <<"sideR:" << '\t' << '\t';
 
-        for(int i=0; i<32; i++) cout << sideR[i];
+        for(bool i : sideR) cout << i;
 
         cout << '\n';
     }
@@ -384,11 +389,11 @@ public:
     void printSides() {
         cout << '\n' <<"sideL:" << '\t' << '\t';
 
-        for(int i=0; i<32; i++) cout << sideL[i];
+        for(bool i : sideL) cout << i;
 
         cout << '\n' <<"sideR:" << '\t' << '\t';
 
-        for(int i=0; i<32; i++) cout << sideR[i];
+        for(bool i : sideR) cout << i;
 
         cout << '\n';
     }
@@ -399,80 +404,112 @@ public:
 
 int main() {
 
-    string input = "123456AB";
-    string key = "AABB0918";
+
+    string input;
+    string key;
     bool binInput[64];
     bool binKey[64];
     string encrypted;
+    int length;
 
     ifstream keyFile;
     keyFile.open("key.txt");
 
+    for(int j=0; j<64; j++) {
+        binInput[j] = false;
+        binKey[j] = false;
+    }
+
+    cin >> input;
+
+    length = input.length();
 
 
     if(keyFile.is_open()) {
 
-        string keyfromfile;
         char in;
+        int counter = 0;
 
         while(!keyFile.eof()){
 
-            keyFile >> in;
+            for(int i=0; i<length; i++) {
 
-            cout << in << endl;
+                if(i != 0 && (i%8) == 0) {
+                                                                    //todo ( to encryption function )
+                    cout << "binInput:" << '\t';
 
+                    for(bool b : binInput) cout << b;
+
+
+                    cout << '\n' <<"binKey:" << '\t' << '\t';
+
+                    for(bool b : binKey) cout << b;
+
+                    cout << '\n';
+
+
+                    Key desKey(binKey);
+                    Des des(binInput, desKey);
+
+                    des.encryption();
+                    des.printEncrypted();
+
+                    for(int j=0; j<64; j++) {
+                        binInput[j] = false;
+                        binKey[j] = false;
+                    }
+
+                    counter = 0;
+                }                                       // encrypt 8 chars
+
+                for(int j=0; j<8; j++) {
+
+                    keyFile >> in;                                                  // Inserting key from file char by char
+
+                    if(in == '0') {
+                        binKey[j+(counter*8)] = false;
+                    } else if(in == '1') {
+                        binKey[j+(counter*8)] = true;
+                    } else {
+                        cout << '\n' << "Wrong key format. Encryption failed.";
+                        return 1;
+                    }
+                }           // insert key to table
+
+
+                int helperInput = int(input[i]);
+
+                for(int j=0; j<8; j++) {
+                    bool resultInput = helperInput%2;
+                    binInput[7-j+(counter*8)] = resultInput;
+                    helperInput /= 2;
+                }
+
+                counter++;
+            }
+
+            //todo ( to encryption function )
+            cout << "binInput:" << '\t';
+
+            for(bool b : binInput) cout << b;
+
+
+            cout << '\n' <<"binKey:" << '\t' << '\t';
+
+            for(bool b : binKey) cout << b;
+
+            cout << '\n';
+
+
+            Key desKey(binKey);
+            Des des(binInput, desKey);
+
+            des.encryption();
+            des.printEncrypted();
+
+            break;
         }
-
-
-        /*
-        for(int i=0; i<8; i++) {
-            keyFile >> in;
-            keyfromfile += in;
-        }
-        */
-
-
-        //cout << "Wejscie: " << keyfromfile <<endl;
     }
-
-
-
-
-    for(int i=0; i<8; i++) {                    // ASCII to binary array
-
-        int helperInput = int(input[i]);
-        int helperKey = int(key[i]);
-
-        for(int j=0; j<8; j++) {
-            bool resultInput = helperInput%2;
-            bool resultKey = helperKey%2;
-
-            binInput[7-j+(i*8)] = resultInput;
-            binKey[7-j+(i*8)] = resultKey;
-
-            helperInput /= 2;
-            helperKey /= 2;
-        }
-    }
-
-
-    cout << "binInput:" << '\t';
-
-    for(int i=0; i<64; i++) cout << binInput[i];
-
-
-    cout << '\n' <<"binKey:" << '\t' << '\t';
-
-    for(int i=0; i<64; i++) cout << binKey[i];
-
-    cout << '\n';
-
-
-    Key desKey(binKey);
-    Des des(binInput, desKey);
-
-    des.encryption();
-    des.printEncrypted();
 
     keyFile.close();
 
